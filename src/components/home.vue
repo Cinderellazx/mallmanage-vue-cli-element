@@ -14,7 +14,8 @@
             </el-col>
             <el-col :span="2" class="loginout">
                 <div class="grid-content bg-purple">
-                    <a href="#">退出</a>
+                    <a href="#"
+                    @click="logout()">退出</a>
                 </div>
             </el-col>
         </el-row>
@@ -28,7 +29,12 @@
 
 <script>
 export default {
-
+  methods: {
+    logout () {
+      sessionStorage.clear()
+      this.$router.push('/login')
+    }
+  }
 }
 </script>
 
