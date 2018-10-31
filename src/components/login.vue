@@ -3,12 +3,15 @@
     <el-form label-position="top" label-width="80px" :model="formdata" class="login-form">
       <h2>用户登录</h2>
         <el-form-item label="用户名">
-            <el-input v-model="formdata.name"></el-input>
+            <el-input v-model="formdata.username"></el-input>
         </el-form-item>
         <el-form-item label="密码">
-            <el-input type="password" v-model="formdata.region"></el-input>
+            <el-input type="password" v-model="formdata.password"></el-input>
         </el-form-item>
-        <el-button type="primary" class="login-button">登录</el-button>
+        <el-button
+          type="primary"
+          class="login-button"
+          @click="checkLogin()">登录</el-button>
     </el-form>
 </div>
 </template>
@@ -18,8 +21,21 @@ export default {
   data () {
     return {
       formdata: {
-        name: '',
+        username: '',
         password: ''
+      }
+    }
+  },
+  methods: {
+    async checkLogin () {
+      const res = await this.$http.post('login', this.formdata)
+      const { data, meta } = res.data
+      if (meta.status === 200) {
+        const token = data.token
+        sessionStorage.setItem('token', token)
+        this.$router.push('/')
+      } else {
+        this.$message.error(meta.msg)
       }
     }
   }
