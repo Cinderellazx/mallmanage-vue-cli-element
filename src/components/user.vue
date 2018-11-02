@@ -9,7 +9,7 @@
         <el-input placeholder="请输入内容" class="input-with-select searchInput">
             <el-button slot="append" icon="el-icon-search"></el-button>
         </el-input>
-        <el-button type="primary">添加用户</el-button>
+        <el-button type="primary" @click="showAddDia()">添加用户</el-button>
     </div>
     <el-table :data="tableData" style="width: 100%">
         <el-table-column label="#" type="index">
@@ -43,6 +43,28 @@
       </template>
         </el-table-column>
     </el-table>
+    <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAddUser">
+      <el-form :model="formData">
+        <el-form-item label="用户名" :label-width="formLabelWidth">
+          <el-input v-model="formData.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" :label-width="formLabelWidth">
+          <el-input v-model="formData.password" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" :label-width="formLabelWidth">
+          <el-input v-model="formData.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" :label-width="formLabelWidth">
+          <el-input v-model="formData.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleAddUser = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="addUser()">确 定</el-button>
+      </div>
+    </el-dialog>
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
@@ -60,19 +82,39 @@ export default {
   data () {
     return {
       tableData: [],
-        currentPage: 1,
-        pageSize: 2,
-        total: 1
+      currentPage: 1,
+      pageSize: 2,
+      total: 1,
+      formLabelWidth: '120px',
+      dialogFormVisibleAddUser: false,
+      formData: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      }
     }
   },
   mounted () {
     this.loadTableData()
   },
   methods: {
+    async addUser () {
+      this.dialogFormVisibleAddUser = false
+      const res = await this.$http.post('users', this.formData)
+      // console.log(res)
+      const {msg, status} = res.data.meta
+      if (status === 201) {
+        this.$message.success(msg)
+        this.loadTableData()
+      }
+    },
+    showAddDia () {
+      this.dialogFormVisibleAddUser = true
+    },
     handleSizeChange (val) {
       this.pageSize = val
       this.loadTableData()
-
     },
     handleCurrentChange (val) {
       this.currentPage = val
