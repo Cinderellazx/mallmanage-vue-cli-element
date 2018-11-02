@@ -6,8 +6,8 @@
         <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="searchArea">
-        <el-input placeholder="请输入内容" class="input-with-select searchInput">
-            <el-button slot="append" icon="el-icon-search"></el-button>
+        <el-input v-model="searchVal" placeholder="请输入内容" class="input-with-select searchInput">
+            <el-button slot="append" icon="el-icon-search" @click="checkUser()"></el-button>
         </el-input>
         <el-button type="primary" @click="showAddDia()">添加用户</el-button>
     </div>
@@ -37,7 +37,12 @@
         </el-table-column>
         <el-table-column prop="address" label="操作">
           <template slot-scope="scope">
-          <el-button size="mini" type="primary" icon="el-icon-edit" plain circle @click="showEditDia(scope.row.id)"></el-button>
+          <el-button
+            size="mini"
+            type="primary"
+            icon="el-icon-edit"
+            plain circle
+            @click="showEditDia(scope.row.id)"></el-button>
           <el-button
             size="mini"
             type="success"
@@ -74,7 +79,7 @@
           @click="addUser()">确 定</el-button>
       </div>
     </el-dialog>
-        <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEditUser">
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEditUser">
       <el-form :model="formData">
         <el-form-item label="用户名" :label-width="formLabelWidth">
           <el-input v-model="formData.username" disabled autocomplete="off"></el-input>
@@ -84,6 +89,21 @@
         </el-form-item>
         <el-form-item label="电话" :label-width="formLabelWidth">
           <el-input v-model="formData.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleEditUser = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="EditUser()">确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="角色分配" :visible.sync="dialogFormVisibleEditUser">
+      <el-form :model="formData">
+        <el-form-item label="用户名" :label-width="formLabelWidth">
+          <el-input v-model="formData.username" disabled autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="角色" :label-width="formLabelWidth">
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -122,13 +142,19 @@ export default {
         email: '',
         mobile: ''
       },
-      userId: 1
+      userId: 1,
+      roles: [],
+      searchVal: ''
     }
   },
   mounted () {
+    // this.currentPage = 1
     this.loadTableData()
   },
   methods: {
+    checkUser () {
+      this.loadTableData()
+    },
     async EditUser () {
       const res = await this.$http.put(`users/${this.userId}`, this.formData)
       // console.log(res)
@@ -178,6 +204,9 @@ export default {
       if (status === 201) {
         this.$message.success(msg)
         this.loadTableData()
+        for (var key in this.formData) {
+          this.formData[key] = ''
+        }
       }
     },
     showAddDia () {
@@ -202,13 +231,15 @@ export default {
     async loadTableData () {
       const AUTH_TOKEN = sessionStorage.getItem('token')
       this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
-      const res = await this.$http.get(`users?pagenum=${this.currentPage}&pagesize=${this.pageSize}`)
+      const res = await this.$http.get(`users?pagenum=${this.currentPage}&pagesize=${this.pageSize}&query=${this.searchVal}`)
       // console.log(res)
       const {data, meta} = res.data
       if (meta.status === 200) {
         this.total = data.total
         // console.log(data.users)
         this.tableData = data.users
+        this.currentPage = 1
+        this.searchVal = ''
       }
     }
   }
