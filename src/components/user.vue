@@ -37,14 +37,18 @@
         </el-table-column>
         <el-table-column prop="address" label="操作">
           <template slot-scope="scope">
-          <el-button size="mini" type="primary" icon="el-icon-edit" circle></el-button>
-          <el-button size="mini" type="success" icon="el-icon-check" circle></el-button>
+          <el-button size="mini" type="primary" icon="el-icon-edit" plain circle @click="showEditDia(scope.row.id)"></el-button>
+          <el-button
+            size="mini"
+            type="success"
+            icon="el-icon-check"
+            plain circle></el-button>
           <el-button
             size="mini"
             type="danger"
             icon="el-icon-delete"
-            plant circle
-            @click="open2(scope.row.id)"></el-button>
+            plain circle
+            @click="deleUser(scope.row.id)"></el-button>
       </template>
         </el-table-column>
     </el-table>
@@ -70,6 +74,25 @@
           @click="addUser()">确 定</el-button>
       </div>
     </el-dialog>
+        <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEditUser">
+      <el-form :model="formData">
+        <el-form-item label="用户名" :label-width="formLabelWidth">
+          <el-input v-model="formData.username" disabled autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" :label-width="formLabelWidth">
+          <el-input v-model="formData.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" :label-width="formLabelWidth">
+          <el-input v-model="formData.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleEditUser = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="EditUser()">确 定</el-button>
+      </div>
+    </el-dialog>
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
@@ -92,19 +115,41 @@ export default {
       total: 1,
       formLabelWidth: '120px',
       dialogFormVisibleAddUser: false,
+      dialogFormVisibleEditUser: false,
       formData: {
         username: '',
         password: '',
         email: '',
         mobile: ''
-      }
+      },
+      userId: 1
     }
   },
   mounted () {
     this.loadTableData()
   },
   methods: {
-    open2 (uId) {
+    async EditUser () {
+      const res = await this.$http.put(`users/${this.userId}`, this.formData)
+      // console.log(res)
+      const {status, msg} = res.data.meta
+      if (status === 200) {
+        this.dialogFormVisibleEditUser = false
+        this.loadTableData()
+        this.$message.success(msg)
+      }
+    },
+    async showEditDia (uId) {
+      this.dialogFormVisibleEditUser = true
+      const res = await this.$http.get(`users/${uId}`)
+      console.log(res)
+      const {data, meta} = res.data
+      if (meta.status === 200) {
+        this.formData = data
+        this.userId = uId
+      }
+    },
+    deleUser (uId) {
       this.$confirm('确认删除?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
