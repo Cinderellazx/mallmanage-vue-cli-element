@@ -39,7 +39,12 @@
           <template slot-scope="scope">
           <el-button size="mini" type="primary" icon="el-icon-edit" circle></el-button>
           <el-button size="mini" type="success" icon="el-icon-check" circle></el-button>
-          <el-button size="mini" type="danger" icon="el-icon-delete" circle></el-button>
+          <el-button
+            size="mini"
+            type="danger"
+            icon="el-icon-delete"
+            plant circle
+            @click="open2(scope.row.id)"></el-button>
       </template>
         </el-table-column>
     </el-table>
@@ -99,6 +104,27 @@ export default {
     this.loadTableData()
   },
   methods: {
+    open2 (uId) {
+      this.$confirm('确认删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const res = await this.$http.delete(`users/${uId}`)
+        // console.log(res)
+        const {msg} = res.data.meta
+        this.loadTableData()
+        this.$message({
+          type: 'success',
+          message: msg
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
     async addUser () {
       this.dialogFormVisibleAddUser = false
       const res = await this.$http.post('users', this.formData)
