@@ -12,7 +12,7 @@
         <el-button type="primary">添加用户</el-button>
     </div>
     <el-table :data="tableData" style="width: 100%">
-        <el-table-column prop="id" label="#" type="index">
+        <el-table-column label="#" type="index">
         </el-table-column>
         <el-table-column prop="username" label="姓名">
         </el-table-column>
@@ -21,8 +21,19 @@
         <el-table-column prop="mobile" label="电话">
         </el-table-column>
         <el-table-column prop="create_time" label="创建日期">
+          <template slot-scope="scope">
+            {{scope.row.create_time | fmtData}}
+          </template>
         </el-table-column>
         <el-table-column prop="mg_state" label="用户状态">
+          <template slot-scope="scope">
+            <el-switch
+              v-model="scope.row.mg_state"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              @change="checkUserState(scope.row.id, scope.row.mg_state)">
+            </el-switch>
+          </template>
         </el-table-column>
         <el-table-column prop="address" label="操作">
           <template slot-scope="scope">
@@ -32,6 +43,15 @@
       </template>
         </el-table-column>
     </el-table>
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="currentPage"
+      :page-sizes="[2, 4, 6, 8]"
+      :page-size="pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
 </div>
 </template>
 
@@ -39,37 +59,42 @@
 export default {
   data () {
     return {
-      tableData: [{
-        date: '2016-05-02',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-04',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1517 弄'
-      }, {
-        date: '2016-05-01',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1519 弄'
-      }, {
-        date: '2016-05-03',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1516 弄'
-      }]
+      tableData: [],
+        currentPage: 1,
+        pageSize: 2,
+        total: 1
     }
   },
   mounted () {
     this.loadTableData()
   },
   methods: {
+    handleSizeChange (val) {
+      this.pageSize = val
+      this.loadTableData()
+
+    },
+    handleCurrentChange (val) {
+      this.currentPage = val
+      this.loadTableData()
+    },
+    async checkUserState (uId, state) {
+      const res = await this.$http.put(`users/${uId}/state/${state}`)
+      // console.log(res)
+      const {status, msg} = res.data.meta
+      if (status === 200) {
+        this.$message.success(msg)
+      }
+    },
     async loadTableData () {
       const AUTH_TOKEN = sessionStorage.getItem('token')
       this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
-      const res = await this.$http.get('users?pagenum=1&pagesize=10')
-      console.log(res)
+      const res = await this.$http.get(`users?pagenum=${this.currentPage}&pagesize=${this.pageSize}`)
+      // console.log(res)
       const {data, meta} = res.data
       if (meta.status === 200) {
-        console.log(data.users)
+        this.total = data.total
+        // console.log(data.users)
         this.tableData = data.users
       }
     }
