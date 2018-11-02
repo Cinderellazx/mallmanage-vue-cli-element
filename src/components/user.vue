@@ -47,7 +47,8 @@
             size="mini"
             type="success"
             icon="el-icon-check"
-            plain circle></el-button>
+            plain circle
+            @click="showRoleDia(scope.row.id)"></el-button>
           <el-button
             size="mini"
             type="danger"
@@ -98,19 +99,28 @@
           @click="EditUser()">确 定</el-button>
       </div>
     </el-dialog>
-    <el-dialog title="角色分配" :visible.sync="dialogFormVisibleEditUser">
+    <el-dialog title="角色分配" :visible.sync="dialogFormVisibleSetRole">
       <el-form :model="formData">
         <el-form-item label="用户名" :label-width="formLabelWidth">
-          <el-input v-model="formData.username" disabled autocomplete="off"></el-input>
+          {{formData.username}}
         </el-form-item>
         <el-form-item label="角色" :label-width="formLabelWidth">
+          <el-select v-model="currentRoleid" placeholder="请选择">
+            <el-option label="请选择" :value="-1"></el-option>
+            <el-option
+              v-for="(item, index) in roles"
+              :key="index"
+              :label="item.roleName"
+              :value="item.id">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisibleEditUser = false">取 消</el-button>
+        <el-button @click="dialogFormVisibleSetRole = false">取 消</el-button>
         <el-button
           type="primary"
-          @click="EditUser()">确 定</el-button>
+          @click="setRole()">确 定</el-button>
       </div>
     </el-dialog>
     <el-pagination
@@ -136,23 +146,47 @@ export default {
       formLabelWidth: '120px',
       dialogFormVisibleAddUser: false,
       dialogFormVisibleEditUser: false,
+      dialogFormVisibleSetRole: false,
       formData: {
         username: '',
         password: '',
         email: '',
         mobile: ''
       },
-      userId: 1,
+      userId: -1,
       roles: [],
-      searchVal: ''
+      searchVal: '',
+      currentRoleid: -1
     }
   },
   mounted () {
-    // this.currentPage = 1
     this.loadTableData()
   },
   methods: {
+    async setRole () {
+      const res = await this.$http.put(`users/${this.userId}/role`, {rid: this.currentRoleid})
+      // console.log(res)
+      const {msg, status} = res.data.meta
+      if (status === 200) {
+        this.$message.success(msg)
+        this.dialogFormVisibleSetRole = false
+      }
+    },
+    async showRoleDia (uId) {
+      this.userId = uId
+      this.dialogFormVisibleSetRole = true
+      const res = await this.$http.get(`users/${uId}`)
+      this.formData.username = res.data.data.username
+      this.currentRoleid = res.data.data.rid
+      this.$http.get('roles')
+        .then(res => {
+          // console.log(res)
+          this.roles = res.data.data
+          // console.log(this.roles)
+        })
+    },
     checkUser () {
+      this.currentPage = 1
       this.loadTableData()
     },
     async EditUser () {
@@ -238,8 +272,7 @@ export default {
         this.total = data.total
         // console.log(data.users)
         this.tableData = data.users
-        this.currentPage = 1
-        this.searchVal = ''
+        // this.searchVal = ''
       }
     }
   }
